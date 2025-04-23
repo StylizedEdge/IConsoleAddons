@@ -4,7 +4,7 @@
             "Name": "SubstanceAutomation",
             "Description": "Automate Substance Designer texture export",
             "Author": "kim's",
-            "Url": "https://raw.githubusercontent.com/StylizedEdge/SubstanceAutomation/blob/main/Assets/Console/Console/Editor/Addons/SubstanceAutomationAddon.cs",
+            "Url": "https://raw.githubusercontent.com/StylizedEdge/IConsoleAddons/refs/heads/main/Addons/SubstanceAutomationAddon.cs",
             "Version": "0.1"
         },
         {
