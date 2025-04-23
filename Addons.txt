@@ -4,15 +4,15 @@
             "Name": "SubstanceAutomation",
             "Description": "Automate Substance Designer texture export",
             "Author": "kim's",
-            "Url": "https://raw.githubusercontent.com/StylizedEdge/SubstanceAutomation/blob/main/Assets/Console/Console/Editor/Addons/SubstanceAutomationAddon.cs",
+            "Url": "https://raw.githubusercontent.com/StylizedEdge/SubstanceAutomation/refs/heads/main/Assets/Console/Editor/Addons/SubstanceAutomation.cs?token=GHSAT0AAAAAADBFFOTDUZVXLCGMIJ5YLAUK2AI7NZA",
             "Version": "0.1"
         },
         {
             "Name": "AddonsDownloader",
             "Description": "Package manager for Console addons",
             "Author": "kim's",
-            "Url": "https://raw.githubusercontent.com/StylizedEdge/SubstanceAutomation/blob/main/Assets/Console/Console/Editor/Addons/AddonsDownloader.cs",
-            "Version": "0.1"
+            "Url": "https://raw.githubusercontent.com/StylizedEdge/SubstanceAutomation/refs/heads/main/Assets/Console/Console/Editor/Addons/SubstanceAutomationAddon.cs?token=GHSAT0AAAAAADBFFOTDRSS7C4AGMVDHMRDU2AI6JYA",
+            "Version": "0.2"
         }
     ]
 }
