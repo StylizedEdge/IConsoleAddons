@@ -1,9 +1,12 @@
-﻿using UnityEditor;
+using System;
+using UnityEditor;
 using UnityEngine;
 using Adobe.Substance;
 using Adobe.Substance.Input;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Addons
 {
@@ -13,14 +16,12 @@ namespace Addons
         private List<string> confirmedInputs = new List<string>();
         private bool isPickingFile = false;
         private Dictionary<string, string> commandTooltip;
-        string exportDirectory = null;
-
+        private string exportDirectory = null;
 
         private readonly List<string> addonCommands = new List<string>
         {
-            "pick file", "get input >", "export input", "debug inputs", "clear", "help", "exit","set export dir","export textures"
+            "pick file", "get input >", "export input", "debug inputs", "clear", "help", "exit", "set export dir", "export textures", "update"
         };
-
 
         public SubstanceAutomation()
         {
@@ -34,7 +35,8 @@ namespace Addons
                 { "help", "Displays the list of addon commands." },
                 { "exit", "Exits the addon environment and returns to the console level." },
                 { "set export dir", "Sets the directory where textures will be exported. Usage: set export dir path/to/directory" },
-                { "export textures", "Exports all output textures from the loaded SubstanceGraphSO to the specified directory." }
+                { "export textures", "Exports all output textures from the loaded SubstanceGraphSO to the specified directory." },
+                { "update", "Checks for and installs the latest version of this addon from the online registry." }
             };
         }
 
@@ -54,14 +56,13 @@ namespace Addons
             {
                 { "Author", "kim's" },
                 { "Website", "https://github.com/yourusername/SubstanceAutomation" },
-                { "Version", "1.0.0" },
+                { "Version", "0.2" },
                 {
                     "Description",
                     "Unity Editor addon for automating Substance Designer texture export and input management"
                 }
             };
         }
-
 
         public void ShowTooltip(string command, ConsoleEditorWindow console)
         {
@@ -80,14 +81,76 @@ namespace Addons
             }
         }
 
+        public async void CheckForUpdates(AddonsDownloader downloader, ConsoleEditorWindow console)
+        {
+            string addonName = GetAddonName().ToLower();
+            console.Log($"Checking for updates for {addonName}...", Color.yellow);
+
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    // Fetch the addons list
+                    var fetchTask = (Task)downloader.GetType()
+                        .GetMethod("FetchAddonsList", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                        .Invoke(downloader, new object[] { console });
+                    await fetchTask;
+
+                    // Check the version
+                    var checkVersionMethod = downloader.GetType()
+                        .GetMethod("CheckVersion", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    await (Task)checkVersionMethod.Invoke(downloader, new object[] { addonName, console });
+
+                    // Access centralRegistry via reflection
+                    var centralRegistryField = downloader.GetType()
+                        .GetField("centralRegistry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    var centralRegistry = (Dictionary<string, AddonsDownloader.AddonInfo>)centralRegistryField.GetValue(downloader);
+
+                    if (centralRegistry.TryGetValue(addonName, out var addon))
+                    {
+                        string localVersion = AddonVersion();
+                        string onlineVersion = addon.Version;
+
+                        if (IsVersionNewer(onlineVersion, localVersion))
+                        {
+                            console.Log($"New version {onlineVersion} available for {addonName}. Updating...", Color.yellow);
+                            await downloader.UpdateAddon(addonName, console);
+                        }
+                        else
+                        {
+                            console.Log($"You are using the latest version of {addonName} ({localVersion}).", Color.green);
+                        }
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    console.Log($"Failed to check for updates: {e.Message}", Color.red);
+                }
+            });
+        }
+
+        private bool IsVersionNewer(string onlineVersion, string localVersion)
+        {
+            var onlineParts = onlineVersion.Split('.').Select(int.Parse).ToArray();
+            var localParts = localVersion.Split('.').Select(int.Parse).ToArray();
+
+            for (int i = 0; i < Math.Min(onlineParts.Length, localParts.Length); i++)
+            {
+                if (onlineParts[i] > localParts[i])
+                    return true;
+                if (onlineParts[i] < localParts[i])
+                    return false;
+            }
+            return onlineParts.Length > localParts.Length;
+        }
+
         public bool HandleCommand(string command, ConsoleEditorWindow console)
         {
             command = command.Trim().ToLower();
 
             if (command == "help")
             {
-                console.Log("Available commands: pick file, get input > inputname, export input, debug inputs, clear",
-                    Color.white);
+                console.Log("Available commands: pick file, get input > inputname, export input, debug inputs, clear, set export dir, export textures, update", Color.white);
                 return true;
             }
             else if (command == "pick file")
@@ -260,6 +323,22 @@ namespace Addons
 
                 return true;
             }
+            else if (command == "update")
+            {
+                var downloader = console.GetType()
+                    .GetField("downloader", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    .GetValue(console) as AddonsDownloader;
+
+                if (downloader == null)
+                {
+                    console.Log("AddonsDownloader not found. Ensure it is installed.", Color.red);
+                    return true;
+                }
+
+                console.Log($"Updating {GetAddonName()}...", Color.yellow);
+                downloader.UpdateAddon(GetAddonName().ToLower(), console);
+                return true;
+            }
 
             return false;
         }
@@ -285,7 +364,7 @@ namespace Addons
 
         public string AddonVersion()
         {
-            return "0.1f";
+            return "0.2";
         }
     }
 }
