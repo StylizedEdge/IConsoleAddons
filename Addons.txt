@@ -12,7 +12,7 @@
             "Description": "Package manager for Console addons",
             "Author": "kim's",
             "Url": "https://raw.githubusercontent.com/StylizedEdge/SubstanceAutomation/refs/heads/main/Assets/Console/Console/Editor/Addons/SubstanceAutomationAddon.cs?token=GHSAT0AAAAAADBFFOTDRSS7C4AGMVDHMRDU2AI6JYA",
-            "Version": "0.1"
+            "Version": "0.2"
         }
     ]
 }
